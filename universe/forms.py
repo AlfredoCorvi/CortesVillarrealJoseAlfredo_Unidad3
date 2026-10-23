@@ -20,6 +20,16 @@ class RegistrationForm(UserCreationForm):
 
 
 class LoginForm(AuthenticationForm):
+    error_messages = {
+        'invalid_login': 'No se pudo iniciar sesión. Revisa tu usuario y contraseña.',
+        'inactive': 'No se pudo iniciar sesión. Revisa tu usuario y contraseña.',
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs['autocomplete'] = 'username'
+        self.fields['username'].widget.attrs.update({
+            'autocomplete': 'username',
+            'autocapitalize': 'none',
+            'spellcheck': 'false',
+        })
+        self.fields['password'].widget.attrs['autocomplete'] = 'current-password'

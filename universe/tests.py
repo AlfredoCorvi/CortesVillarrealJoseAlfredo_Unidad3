@@ -1,9 +1,62 @@
+from datetime import timedelta
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.contrib.sessions.models import Session
+from django.utils import timezone
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 
+@override_settings(STORAGES={
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+})
 class AuthenticationTests(TestCase):
+    def test_login_errors_do_not_reveal_account_status(self):
+        get_user_model().objects.create_user(username='active', password='Secret!7392')
+        get_user_model().objects.create_user(
+            username='inactive', password='Secret!7392', is_active=False,
+        )
+        errors = []
+        for username, password in [('missing', 'Secret!7392'), ('active', 'wrong'), ('inactive', 'Secret!7392')]:
+            response = self.client.post(reverse('login'), {'username': username, 'password': password})
+            errors.append(list(response.context['form'].non_field_errors()))
+            self.assertNotIn('_auth_user_id', self.client.session)
+            self.assertNotContains(response, 'value="' + password + '"')
+        self.assertTrue(errors[0])
+        self.assertEqual(errors[0], errors[1])
+        self.assertEqual(errors[1], errors[2])
+
+    def test_login_rotates_session_and_expires_without_sliding(self):
+        get_user_model().objects.create_user(username='active', password='Secret!7392')
+        session = self.client.session
+        session['visit'] = 'before-login'
+        session.save()
+        old_key = session.session_key
+        response = self.client.post(reverse('login'), {'username': 'active', 'password': 'Secret!7392'})
+        self.assertNotEqual(old_key, self.client.session.session_key)
+        self.assertFalse(Session.objects.filter(session_key=old_key).exists())
+        cookie = response.cookies[settings.SESSION_COOKIE_NAME]
+        self.assertTrue(cookie['httponly'])
+        self.assertEqual(cookie['samesite'], 'Lax')
+        self.assertEqual(cookie['expires'], '')
+        stored = Session.objects.get(session_key=self.client.session.session_key)
+        self.assertAlmostEqual((stored.expire_date - timezone.now()).total_seconds(), 3600, delta=10)
+        session_expiry = stored.expire_date
+        self.client.get(reverse('home'))
+        stored.refresh_from_db()
+        self.assertEqual(stored.expire_date, session_expiry)
+        Session.objects.filter(pk=stored.pk).update(expire_date=timezone.now() - timedelta(seconds=1))
+        response = self.client.get(reverse('home'))
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+
+    def test_login_response_is_not_cached_and_supports_password_managers(self):
+        response = self.client.get(reverse('login'))
+        self.assertIn('no-store', response.headers['Cache-Control'])
+        for attribute in ['autocomplete="username"', 'autocomplete="current-password"', 'autocapitalize="none"', 'spellcheck="false"']:
+            self.assertContains(response, attribute)
+
     def registration_data(self, **changes):
         data = {
             'username': 'explorador',

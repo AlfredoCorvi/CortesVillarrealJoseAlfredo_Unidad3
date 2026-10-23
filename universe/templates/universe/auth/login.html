@@ -8,6 +8,7 @@
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ next }}">
         {% include 'universe/auth/fields.html' %}
+        <p class="field-help">Por seguridad, tu sesión caduca después de una hora. En equipos compartidos, cierra sesión al terminar.</p>
         <button class="button button-primary auth-submit" type="submit">Entrar a Cosmoz <span aria-hidden="true">↗</span></button>
     </form>
     <p class="auth-switch">¿Aún no tienes cuenta? <a href="{% url 'register' %}">Regístrate</a></p>
