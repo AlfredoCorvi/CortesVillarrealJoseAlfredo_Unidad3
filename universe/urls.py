@@ -4,6 +4,7 @@ from .forms import LoginForm
 from . import views
 
 urlpatterns = [
+    path('nasa/', views.nasa_gallery, name='nasa_gallery'),
     path('', views.index, name='index'),
     path('registro/', views.register, name='register'),
     path('login/', LoginView.as_view(

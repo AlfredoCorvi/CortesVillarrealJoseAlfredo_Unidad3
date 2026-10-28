@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explora con NASA | Cosmoz</title>
+    <link rel="stylesheet" href="{% static 'universe/css/index.css' %}">
+</head>
+<body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="site-header container">
+        <a class="brand" href="{% url 'home' %}">cosmoz<span class="brand-dot">.</span></a>
+        <a class="text-link" href="{% url 'home' %}">← Volver a explorar</a>
+    </header>
+    <main id="contenido" class="container nasa-gallery">
+        <p class="eyebrow">UNA VENTANA AL COSMOS</p>
+        <h1>Explora con NASA</h1>
+        <p>Imágenes de NASA Image and Video Library. Los títulos y las descripciones se muestran en su idioma original.</p>
+        <form method="get" class="nasa-topics">
+            <label for="tema">¿Qué quieres explorar?</label>
+            <select id="tema" name="tema">
+                {% for key, topic in topics.items %}
+                <option value="{{ key }}" {% if key == selected_topic %}selected{% endif %}>{{ topic.0 }}</option>
+                {% endfor %}
+            </select>
+            <button class="button button-primary" type="submit">Explorar imágenes</button>
+        </form>
+        {% if unavailable %}
+        <div class="notice" role="alert">
+            <p>No pudimos consultar las imágenes de NASA en este momento. Inténtalo de nuevo en unos minutos.</p>
+            <a class="text-link" href="?tema={{ selected_topic }}">Reintentar</a>
+        </div>
+        {% else %}
+        <div class="nasa-grid">
+            {% for image in images %}
+            <article class="planet-card nasa-card">
+                <img src="{{ image.image_url }}" alt="{{ image.title }}" loading="lazy" width="640" height="400" referrerpolicy="no-referrer">
+                <div class="nasa-copy">
+                    <h2>{{ image.title }}</h2>
+                    <p>{{ image.description }}</p>
+                    <p class="planet-kind">Crédito: {{ image.credit }}</p>
+                    <a class="text-link" href="{{ image.source_url }}" target="_blank" rel="noopener noreferrer">Ver en NASA ↗</a>
+                </div>
+            </article>
+            {% empty %}
+            <p>No se encontraron imágenes para este tema. Prueba con otro.</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <p class="nasa-source">Fuente: <a class="text-link" href="https://images.nasa.gov/">NASA Image and Video Library</a>.</p>
+    </main>
+</body>
+</html>

@@ -16,7 +16,7 @@
         <a class="brand" href="#inicio" aria-label="Cosmoz, inicio"><span class="brand-symbol" aria-hidden="true">✳</span> cosmoz<span class="brand-dot">.</span></a>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="navigation" hidden>Menú <span aria-hidden="true">☰</span></button>
         <nav id="navigation" aria-label="Navegación principal">
-            <a href="#planetas">Sistema solar</a><a href="#descubre">Descubre</a><a href="#nosotros">Sobre Cosmoz</a>
+            <a href="#planetas">Sistema solar</a><a href="{% url 'nasa_gallery' %}">Imágenes NASA</a><a href="#nosotros">Sobre Cosmoz</a>
             <div class="account-nav">
                 {% if user.is_authenticated %}
                     <span class="account-name">Hola, {{ user.username }}</span>
