@@ -19,6 +19,7 @@ from django.urls import path, include
 from universe import views
 
 urlpatterns = [
+    path('api/', include('universe.api_urls')),
     path('', views.index, name='home'),
     path('admin/', admin.site.urls),
     path('universe/', include('universe.urls')),
